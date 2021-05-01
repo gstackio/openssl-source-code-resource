@@ -165,3 +165,7 @@ resources:
       file:        (( concat "versions/" meta.pipeline ))
       private_key: ((github-private-key))
       git_user:    "((git-commit-name)) <((git-commit-email))>"
+
+  - name: git
+    check_every: 24h
+    webhook_token: ((concourse-webhook-token))
