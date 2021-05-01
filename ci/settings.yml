@@ -16,75 +16,7 @@ meta:
       username: ((docker-registry-username))
       password: ((docker-registry-password))
 
-  tests:
-    cmd: bash
-    args:
-      - -c
-      - |
-        set -ueo pipefail -x
-
-        failure="false"
-
-        version_family="1.1.1"
-        old_version="1.1.1j"
-
-        latest_version_json=$(
-            /opt/resource/in <<EOF
-        { "source": { "family": "${version_family}" } }
-        EOF
-        )
-        latest_version=$(jq --raw-output '.version.version' <<< "${latest_version_json}")
-
-        if [[ ${latest_version} == ${version_family}* ]]; then
-            echo >&2 "FAIL: expected version to start with '${version_family}', but got '${latest_version}'."
-            failure="true"
-        fi
-
-        mkdir "old"
-        /opt/resource/check "old" <<EOF
-        { "version": { "version": "${old_version}" },
-          "source": { "family": "${version_family}" }
-        }
-        EOF
-
-        if [[ ! -f "old/openssl-${old_version}.tar.gz" ]]; then
-            >&2 echo "FAIL: expected to found a 'openssl-${old_version}.tar.gz' tarball, but got:"
-            >&2 ls -la "old/"
-            failure="true"
-        fi
-
-        if [[ ! -s "old/openssl-${old_version}.tar.gz" ]]; then
-            echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
-            >&2 ls -la "old/"
-            failure="true"
-        fi
-
-        mkdir "current"
-        /opt/resource/check "current" <<EOF
-        { ${latest_version_json},
-          "source": { "family": "${version_family}" }
-        }
-        EOF
-
-        if [[ ! -f "current/openssl-${latest_version}.tar.gz" ]]; then
-            >&2 echo "FAIL: expected to found a 'openssl-${latest_version}.tar.gz' tarball, but got:"
-            >&2 ls -la "current/"
-            failure="true"
-        fi
-
-        if [[ ! -s "current/openssl-${latest_version}.tar.gz" ]]; then
-            echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
-            >&2 ls -la "current/"
-            failure="true"
-        fi
-
-        if [[ ${failure} == true ]]; then
-            exit 1
-        fi
-        exit 0
-
   dockerhub:
-    email:    (( prune ))
     username: ((docker-registry-username))
     password: ((docker-registry-password))
     repository: (( concat "harbor.ci.gstack.io/gstack/" meta.name ))
@@ -109,24 +41,99 @@ meta:
     channel:       "#pipelines-notifications"
     test_fail_msg:  '(( concat ":concourse-fail: <" meta.url "/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME| Failed " meta.name " tests!  Click for details.>" ))'
 
+groups:
+  - name: (( grab meta.name ))
+    jobs:
+      - (( delete "major" ))
+      - (( delete "minor" ))
+      - (( append ))
+      - test
+  - name: version
+    jobs:
+      - major
+      - minor
+
 jobs:
 
   - name: test
-    public: true
     serial: true
     plan:
       - in_parallel:
-          - { get: edge,    passed: [build], trigger: true }
-          - { get: source,  passed: [build] }
+          - { get: edge, passed: [ build ], trigger: true }
+          - { get: git,  passed: [ build ] }
       - task: test-image
         image: edge
         config:
           platform: linux
           inputs:
-            - name: source
+            - name: git
           run:
-            path: (( grab meta.tests.cmd ))
-            args: (( grab meta.tests.args ))
+            path: bash
+            args:
+              - -c
+              - |
+                set -ueo pipefail -x
+
+                failure="false"
+
+                version_family="1.1.1"
+                old_version="1.1.1j"
+
+                latest_version_json=$(
+                    /opt/resource/check <<EOF
+                { "source": { "family": "${version_family}" } }
+                EOF
+                )
+                latest_version=$(jq --raw-output '.[0].version' <<< "${latest_version_json}")
+
+                if [[ ${latest_version} == ${version_family}* ]]; then
+                    echo >&2 "FAIL: expected version to start with '${version_family}', but got '${latest_version}'."
+                    failure="true"
+                fi
+
+                mkdir "old"
+                /opt/resource/in "old" <<EOF
+                { "version": { "version": "${old_version}" },
+                  "source": { "family": "${version_family}" }
+                }
+                EOF
+
+                if [[ ! -f "old/openssl-${old_version}.tar.gz" ]]; then
+                    >&2 echo "FAIL: expected to found a 'openssl-${old_version}.tar.gz' tarball, but got:"
+                    >&2 ls -la "old/"
+                    failure="true"
+                fi
+
+                if [[ ! -s "old/openssl-${old_version}.tar.gz" ]]; then
+                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+                    >&2 ls -la "old/"
+                    failure="true"
+                fi
+
+                mkdir "current"
+                /opt/resource/in "current" <<EOF
+                { ${latest_version_json},
+                  "source": { "family": "${version_family}" }
+                }
+                EOF
+
+                if [[ ! -f "current/openssl-${latest_version}.tar.gz" ]]; then
+                    >&2 echo "FAIL: expected to found a 'openssl-${latest_version}.tar.gz' tarball, but got:"
+                    >&2 ls -la "current/"
+                    failure="true"
+                fi
+
+                if [[ ! -s "current/openssl-${latest_version}.tar.gz" ]]; then
+                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+                    >&2 ls -la "current/"
+                    failure="true"
+                fi
+
+                if [[ ${failure} == true ]]; then
+                    exit 1
+                fi
+                exit 0
+
         on_failure:
           put: notify
           params:
@@ -134,6 +141,14 @@ jobs:
             username: (( grab meta.slack.username ))
             icon_url: (( grab meta.slack.icon ))
             text:     (( grab meta.slack.test_fail_msg ))
+
+  - name: promote
+    plan:
+      - (( inline ))
+      - in_parallel:
+          - (( merge on get ))
+          - { get: edge, passed: [ (( replace )), test ] }
+          - { get: git,  passed: [ (( replace )), test ] }
 
 resources:
 
