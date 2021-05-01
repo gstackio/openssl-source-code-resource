@@ -125,15 +125,12 @@ jobs:
             GIT_EMAIL:    (( grab meta.git.email ))
             GIT_NAME:     (( grab meta.git.name ))
 
-      - put: latest # as 'latest'
+      - put: latest
         params:
-          load:       edge
-
-      - put: latest # as 'vX.Y.Z'
-        params:
-          tag:             version/number
-          tag_prefix:      v
-          load:       edge
+          tag:           version/number
+          tag_prefix:    v
+          load:          edge
+          tag_as_latest: true
 
       - put: version
         params:
