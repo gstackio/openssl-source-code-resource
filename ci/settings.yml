@@ -87,7 +87,7 @@ jobs:
                 )
                 latest_version=$(jq --raw-output '.[0].version' <<< "${latest_version_json}")
 
-                if [[ ${latest_version} == ${version_family}* ]]; then
+                if [[ ${latest_version} != ${version_family}* ]]; then
                     echo >&2 "FAIL: expected version to start with '${version_family}', but got '${latest_version}'."
                     failure="true"
                 fi
