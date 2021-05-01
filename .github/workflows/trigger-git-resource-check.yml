@@ -9,6 +9,6 @@ jobs:
         with:
           concourse-url:           https://ci.gstack.io
           concourse-team:          gk-plat-devs
-          concourse-pipeline:      gk-kong-boshreleases
+          concourse-pipeline:      openssl-source-code-resource
           concourse-resource:      git
           concourse-webhook-token: ${{ secrets.CONCOURSE_WEBHOOK_TOKEN }}
