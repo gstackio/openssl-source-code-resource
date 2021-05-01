@@ -45,8 +45,10 @@ if [[ -z ${tarball_url} ]]; then
 fi
 
 echo >&2 "Downloading ${tarball_url}"
-curl -O "${tarball_url}"
-curl -o "sha256" "${tarball_url}.sha256"
+curl  --silent --fail --show-error --location --remote-name \
+    --url "${tarball_url}"
+curl  --silent --fail --show-error --location --output "sha256" \
+    --url "${tarball_url}.sha256"
 sha256=$(< sha256)
 sha256sum --check <<< "${sha256}  openssl-${version}.tar.gz"
 
