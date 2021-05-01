@@ -80,9 +80,10 @@ jobs:
                 old_version="1.1.1j"
 
                 latest_version_json=$(
-                    /opt/resource/check <<EOF
-                { "source": { "family": "${version_family}" } }
-                EOF
+                    jq --null-input \
+                            --arg "family" "${version_family}" \
+                            '{ "source": { "family": $family } }' \
+                        | /opt/resource/check
                 )
                 latest_version=$(jq --raw-output '.[0].version' <<< "${latest_version_json}")
 
@@ -92,11 +93,14 @@ jobs:
                 fi
 
                 mkdir "old"
-                /opt/resource/in "old" <<EOF
-                { "version": { "version": "${old_version}" },
-                  "source": { "family": "${version_family}" }
-                }
-                EOF
+                jq --null-input \
+                        --arg "version" "${old_version}" \
+                        --arg "family" "${version_family}" \
+                        '{
+                          "version": { "version": $version },
+                          "source": { "family": $family }
+                        }' \
+                    | /opt/resource/in "old"
 
                 if [[ ! -f "old/openssl-${old_version}.tar.gz" ]]; then
                     >&2 echo "FAIL: expected to found a 'openssl-${old_version}.tar.gz' tarball, but got:"
@@ -111,11 +115,14 @@ jobs:
                 fi
 
                 mkdir "current"
-                /opt/resource/in "current" <<EOF
-                { ${latest_version_json},
-                  "source": { "family": "${version_family}" }
-                }
-                EOF
+                jq --null-input \
+                        --arg "version" "${latest_version}" \
+                        --arg "family" "${version_family}" \
+                        '{
+                          "version": { "version": $version },
+                          "source": { "family": $family }
+                        }' \
+                    | /opt/resource/in "current"
 
                 if [[ ! -f "current/openssl-${latest_version}.tar.gz" ]]; then
                     >&2 echo "FAIL: expected to found a 'openssl-${latest_version}.tar.gz' tarball, but got:"
