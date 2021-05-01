@@ -21,36 +21,34 @@ if [[ -z ${source_family} ]]; then
     exit 1
 fi
 
-params_regexp=$(jq -r '.params.regexp // empty' <<< "${payload}")
-
 >&2 echo "Fetching assets in ${source_family} family v${version}"
 
 pushd "${destination}" > /dev/null
 echo "${version}"       > version
 echo "${source_family}" > family
 
-build_urls=$(
-    curl --silent --fail --show-error --location \
-            --url "http://artfiles.org/openssl.org/source/old/${source_family}/" \
-        | sed -ne 's/^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*/\1/p'
-    curl --silent --fail --show-error --location \
-            --url "http://artfiles.org/openssl.org/source/" \
-        | sed -ne 's/^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*/\1/p'
+tarball_url=$(
+    (
+        curl --silent --fail --show-error --location \
+                --url "http://artfiles.org/openssl.org/source/old/${source_family}/" \
+            | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/old/'"${source_family}"'/\1|p'
+        curl --silent --fail --show-error --location \
+                --url "http://artfiles.org/openssl.org/source/" \
+            | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/\1|p'
+    ) | tail -n1
 )
-if [[ -n ${params_regexp} ]]; then
-    set +e
-    build_urls=$(grep "${params_regexp}" <<< "${build_urls}")
-    set -e
-fi
-if [[ -n ${build_urls} ]]; then
-    for url in ${build_urls}; do
-        echo >&2 "Downloading ${url}"
-        curl -O "${url}"
-    done
-else
-    echo >&2 "regexp '${params_regexp}' did not match any build URLs"
+if [[ -z ${tarball_url} ]]; then
+    echo >&2 "No such 'openssl-${version}.tar.gz' tarball available" \
+        "on 'http://artfiles.org/openssl.org/source/'" \
+        "or 'http://artfiles.org/openssl.org/source/old/${source_family}/'"
     exit 1
 fi
+
+echo >&2 "Downloading ${tarball_url}"
+curl -O "${tarball_url}"
+curl -o "sha256" "${tarball_url}.sha256"
+sha256=$(< sha256)
+sha256sum --check <<< "${sha256}  openssl-${version}.tar.gz"
 
 jq --null-input \
     --arg "version" "${version}" \
