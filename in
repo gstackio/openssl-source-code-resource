@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -ueo pipefail
+
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
+destination=$1
+
+payload=$(cat <&0)
+
+version=$(jq --raw-output '.version.version // empty' <<< "${payload}")
+if [[ -z ${version} ]]; then
+    echo >&2 "Version info 'version' is missing"
+    exit 1
+fi
+
+source_family=$(jq -r '.source.family // empty' <<< "${payload}")
+if [[ -z ${source_family} ]]; then
+    echo >&2 "Source parameter 'family' is missing"
+    exit 1
+fi
+
+params_regexp=$(jq -r '.params.regexp // empty' <<< "${payload}")
+
+>&2 echo "Fetching assets in ${source_family} family v${version}"
+
+pushd "${destination}" > /dev/null
+echo "${version}"       > version
+echo "${source_family}" > family
+
+build_urls=$(
+    curl --silent --fail --show-error --location \
+            --url "http://artfiles.org/openssl.org/source/old/${source_family}/" \
+        | sed -ne 's/^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*/\1/p'
+    curl --silent --fail --show-error --location \
+            --url "http://artfiles.org/openssl.org/source/" \
+        | sed -ne 's/^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*/\1/p'
+)
+if [[ -n ${params_regexp} ]]; then
+    set +e
+    build_urls=$(grep "${params_regexp}" <<< "${build_urls}")
+    set -e
+fi
+if [[ -n ${build_urls} ]]; then
+    for url in ${build_urls}; do
+        echo >&2 "Downloading ${url}"
+        curl -O "${url}"
+    done
+else
+    echo >&2 "regexp '${params_regexp}' did not match any build URLs"
+    exit 1
+fi
+
+jq --null-input \
+    --arg "version" "${version}" \
+    '{ version: { version: $version } }' \
+    >&3

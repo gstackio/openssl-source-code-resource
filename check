@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -ueo pipefail
+
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
+payload=$(cat <&0)
+
+source_family=$(jq -r '.source.family // empty' <<< "${payload}")
+if [[ -z ${source_family} ]]; then
+    echo >&2 "Source parameter 'family' is missing"
+    exit 1
+fi
+
+if ! curl --silent --fail \
+        --url "http://artfiles.org/openssl.org/source/old/${source_family}/" \
+        > /dev/null
+then
+    >&2 echo "Unknown openssl version family '${source_family}'"
+    exit 1
+fi
+
+>&2 echo "Looking up versions of openssl '${source_family}'"
+latest_version=$(
+    (
+        curl --silent --fail --show-error --location \
+                --url "http://artfiles.org/openssl.org/source/old/${source_family}/" \
+            | sed -ne 's/^.*href="openssl-\([0-9.]\{1,\}[a-z]\{0,1\}\)\.tar\.gz">.*/\1/p'
+        curl --silent --fail --show-error --location \
+                --url "http://artfiles.org/openssl.org/source/" \
+            | sed -ne 's/^.*href="openssl-\([0-9.]\{1,\}[a-z]\{0,1\}\)\.tar\.gz">.*/\1/p'
+    ) | sort -V | tail -n1
+)
+
+>&2 echo "Latest version ${latest_version}"
+
+jq --null-input \
+    --arg "version" "${latest_version}" \
+    '[ { version: $version } ]' \
+    >&3
