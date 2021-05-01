@@ -8,7 +8,7 @@ you to watch for new releases and fetch them.
 [artfiles_mirror]: http://artfiles.org/openssl.org/source/
 
 
-## Deploying to Concourse
+## Using in a Concourse pipeline
 
 You can use the Docker image by defining a [resource type][resource_types] in
 your pipeline YAML definition.
@@ -62,6 +62,8 @@ Also creates files:
 
 * `version` file with the current version
 * `family` file with the version family
+* `sha256` file with the SHA256 checksum from OpenSSL site (already verified at
+  download by this resource)
 
 ### `out`: Not implemented
 
