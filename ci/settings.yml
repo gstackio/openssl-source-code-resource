@@ -1,0 +1,152 @@
+---
+meta:
+  name:    openssl-source-code-resource
+  target:  gk-plat-devs
+  url:     https://ci.gstack.io
+
+  initial_version: 1.0.0
+
+  git:
+    email:  ((git-commit-email))
+    name:   ((git-commit-name))
+
+  image:
+    name: harbor.ci.gstack.io/gstack/gk-ops
+    registry:
+      username: ((docker-registry-username))
+      password: ((docker-registry-password))
+
+  tests:
+    cmd: bash
+    args:
+      - -c
+      - |
+        set -ueo pipefail -x
+
+        failure="false"
+
+        version_family="1.1.1"
+        old_version="1.1.1j"
+
+        latest_version_json=$(
+            /opt/resource/in <<EOF
+        { "source": { "family": "${version_family}" } }
+        EOF
+        )
+        latest_version=$(jq --raw-output '.version.version' <<< "${latest_version_json}")
+
+        if [[ ${latest_version} == ${version_family}* ]]; then
+            echo >&2 "FAIL: expected version to start with '${version_family}', but got '${latest_version}'."
+            failure="true"
+        fi
+
+        mkdir "old"
+        /opt/resource/check "old" <<EOF
+        { "version": { "version": "${old_version}" },
+          "source": { "family": "${version_family}" }
+        }
+        EOF
+
+        if [[ ! -f "old/openssl-${old_version}.tar.gz" ]]; then
+            >&2 echo "FAIL: expected to found a 'openssl-${old_version}.tar.gz' tarball, but got:"
+            >&2 ls -la "old/"
+            failure="true"
+        fi
+
+        if [[ ! -s "old/openssl-${old_version}.tar.gz" ]]; then
+            echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+            >&2 ls -la "old/"
+            failure="true"
+        fi
+
+        mkdir "current"
+        /opt/resource/check "current" <<EOF
+        { ${latest_version_json},
+          "source": { "family": "${version_family}" }
+        }
+        EOF
+
+        if [[ ! -f "current/openssl-${latest_version}.tar.gz" ]]; then
+            >&2 echo "FAIL: expected to found a 'openssl-${latest_version}.tar.gz' tarball, but got:"
+            >&2 ls -la "current/"
+            failure="true"
+        fi
+
+        if [[ ! -s "current/openssl-${latest_version}.tar.gz" ]]; then
+            echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+            >&2 ls -la "current/"
+            failure="true"
+        fi
+
+        if [[ ${failure} == true ]]; then
+            exit 1
+        fi
+        exit 0
+
+  dockerhub:
+    email:    (( prune ))
+    username: ((docker-registry-username))
+    password: ((docker-registry-password))
+    repository: (( concat "harbor.ci.gstack.io/gstack/" meta.name ))
+
+  aws:
+    bucket:      (( grab meta.pipeline ))
+    region_name: eu-west-3
+    access_key:  ((aws-access-key))
+    secret_key:  ((aws-secret-key))
+
+  github:
+    owner:        gstackio
+    repo:         openssl-source-code-resource
+    branch:       master
+    private_key:  ((github-private-key))
+    access_token: ((github-access-token))
+
+  slack:
+    webhook:       ((slack-webhook))
+    username:      ((slack-username))
+    icon:          ((slack-icon-url))
+    channel:       "#pipelines-notifications"
+    test_fail_msg:  '(( concat ":concourse-fail: <" meta.url "/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME| Failed " meta.name " tests!  Click for details.>" ))'
+
+jobs:
+
+  - name: test
+    public: true
+    serial: true
+    plan:
+      - in_parallel:
+          - { get: edge,    passed: [build], trigger: true }
+          - { get: source,  passed: [build] }
+      - task: test-image
+        image: edge
+        config:
+          platform: linux
+          inputs:
+            - name: source
+          run:
+            path: (( grab meta.tests.cmd ))
+            args: (( grab meta.tests.args ))
+        on_failure:
+          put: notify
+          params:
+            channel:  (( grab meta.slack.channel ))
+            username: (( grab meta.slack.username ))
+            icon_url: (( grab meta.slack.icon ))
+            text:     (( grab meta.slack.test_fail_msg ))
+
+resources:
+
+  - name: version
+    source:
+      bucket:            (( prune ))
+      region_name:       (( prune ))
+      key:               (( prune ))
+      access_key_id:     (( prune ))
+      secret_access_key: (( prune ))
+      driver:      git
+      uri:         git@github.com:gstackio/gk-pipelines-compass.git
+      branch:      master
+      file:        (( concat "versions/" meta.pipeline ))
+      private_key: ((github-private-key))
+      git_user:    "((git-commit-name)) <((git-commit-email))>"
