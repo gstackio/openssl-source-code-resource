@@ -1,6 +1,7 @@
 ---
 meta:
   name:    openssl-source-code-resource
+  release: OpenSSL tarball Concourse resource
   target:  gk-plat-devs
   url:     https://ci.gstack.io
 
