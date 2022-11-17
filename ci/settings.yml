@@ -207,6 +207,7 @@ resources:
     webhook_token: ((concourse-webhook-token))
 
   - name: version
+    icon: github
     source:
       bucket:            (( prune ))
       region_name:       (( prune ))
