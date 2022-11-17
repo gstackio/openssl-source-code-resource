@@ -14,7 +14,7 @@ if [[ -z ${source_family} ]]; then
 fi
 
 if ! curl --silent --fail \
-        --url "http://artfiles.org/openssl.org/source/old/${source_family}/" \
+        --url "https://artfiles.org/openssl.org/source/old/${source_family}/" \
         > /dev/null
 then
     >&2 echo "Unknown openssl version family '${source_family}'"
@@ -25,10 +25,10 @@ fi
 latest_version=$(
     (
         curl --silent --fail --show-error --location \
-                --url "http://artfiles.org/openssl.org/source/old/${source_family}/" \
+                --url "https://artfiles.org/openssl.org/source/old/${source_family}/" \
             | sed -ne 's/^.*href="openssl-\([0-9.]\{1,\}[a-z]\{0,1\}\)\.tar\.gz">.*/\1/p'
         curl --silent --fail --show-error --location \
-                --url "http://artfiles.org/openssl.org/source/" \
+                --url "https://artfiles.org/openssl.org/source/" \
             | sed -ne 's/^.*href="openssl-\([0-9.]\{1,\}[a-z]\{0,1\}\)\.tar\.gz">.*/\1/p'
     ) | sort -V | tail -n1
 )

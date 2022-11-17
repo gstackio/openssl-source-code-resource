@@ -30,17 +30,17 @@ echo "${source_family}" > family
 tarball_url=$(
     (
         curl --silent --fail --show-error --location \
-                --url "http://artfiles.org/openssl.org/source/old/${source_family}/" \
+                --url "https://artfiles.org/openssl.org/source/old/${source_family}/" \
             | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/old/'"${source_family}"'/\1|p'
         curl --silent --fail --show-error --location \
-                --url "http://artfiles.org/openssl.org/source/" \
+                --url "https://artfiles.org/openssl.org/source/" \
             | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/\1|p'
     ) | tail -n1
 )
 if [[ -z ${tarball_url} ]]; then
     echo >&2 "No such 'openssl-${version}.tar.gz' tarball available" \
-        "on 'http://artfiles.org/openssl.org/source/'" \
-        "or 'http://artfiles.org/openssl.org/source/old/${source_family}/'"
+        "on 'https://artfiles.org/openssl.org/source/'" \
+        "or 'https://artfiles.org/openssl.org/source/old/${source_family}/'"
     exit 1
 fi
 
