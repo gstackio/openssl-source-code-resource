@@ -18,7 +18,7 @@ if [[ ${source_family} == 0.9.* ]]; then
     directory="0.9.x"
 fi
 
-if ! curl --silent --fail \
+if ! curl --head --silent --fail \
         --url "https://artfiles.org/openssl.org/source/old/${directory}/" \
         > /dev/null
 then

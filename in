@@ -52,10 +52,27 @@ fi
 echo >&2 "Downloading ${tarball_url}"
 curl  --silent --fail --show-error --location --remote-name \
     --url "${tarball_url}"
-curl  --silent --fail --show-error --location --output "sha256" \
-    --url "${tarball_url}.sha256"
-sha256=$(< sha256)
-sha256sum --check <<< "${sha256}  openssl-${version}.tar.gz"
+if curl  --silent --fail --location --output "sha256" \
+        --url "${tarball_url}.sha256"
+then
+    echo >&2 "Checking sha256 fingerprint"
+    sha256=$(< sha256)
+    sha256sum --check <<< "${sha256}  openssl-${version}.tar.gz"
+elif curl  --silent --fail --location --output "sha1" \
+        --url "${tarball_url}.sha1"
+    echo >&2 "Checking sha1 fingerprint"
+    sha1=$(< sha1)
+    sha1sum --check <<< "${sha1}  openssl-${version}.tar.gz"
+elif curl  --silent --fail --location --output "md5" \
+        --url "${tarball_url}.md5"
+    echo >&2 "Checking md5 fingerprint"
+    md5=$(< md5)
+    md5sum --check <<< "${md5}  openssl-${version}.tar.gz"
+else
+    echo >&2 "No '.sha256', nor '.sha1', nor '.md5' fingerprint" \
+        "could be downloaded"
+    exit 1
+fi
 
 jq --null-input \
     --arg "version" "${version}" \

@@ -44,9 +44,9 @@ jobs:
 
 ## Source Configuration
 
-- `family`: *Required.* The OpenSSL versiion family, like `1.1.1`
-  (recommended), or the non-recommended `1.1.0`, `1.0.2`, `1.0.1`, `1.0.0` and
-  `0.9.x`.
+- `family`: *Required.* The OpenSSL version family, like `3.0` or `1.1.1`
+  (recommended), or the non-recommended `1.1.0`, `1.0.2`, `1.0.1`, `1.0.0`,
+  `0.9.8`, `0.9.7` and `0.9.6`.
 
 ## Behavior
 
