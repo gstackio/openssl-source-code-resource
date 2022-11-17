@@ -109,6 +109,20 @@ jobs:
                     failure="true"
                 fi
 
+                pushd "artifact" > /dev/null
+                    if [[ ! -f sha256 ]]; then
+                        echo >&2 "FAIL: expected 'sha256' file to exist in artifact directory."
+                        >&2 ls -la
+                        failure="true"
+                    fi
+                    if ! sha256sum --check <<< "$(< sha256)  openssl-${old_version}.tar.gz"
+                    then
+                        echo >&2 "FAIL: expected 'sha256' checksum be correct."
+                        >&2 ls -la "artifact/"
+                        failure="true"
+                    fi
+                popd > /dev/null
+
                 mkdir -p "artifact"
                 jq --null-input \
                         --arg "version" "${latest_version}" \

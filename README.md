@@ -58,12 +58,19 @@ Get the latest version of OpenSSL source code in the defined version family.
 
 Downloads the source code tarball for a version.
 
-Also creates files:
+Also creates these files in the output artifact directory:
 
 * `version` file with the current version
 * `family` file with the version family
 * `sha256` file with the SHA256 checksum from OpenSSL site (already verified at
-  download by this resource)
+  download by the resource)
+
+Whenever the `sha256` is not provided by the openssl.org download site, then
+`sha1` is tried and checked, then `md5`. Which fingerprint is checked is
+detailed in the resource logs, and related files are kept in the output artifact
+directory. When non is ab-vailable, the resource fails. Whenever the `sha256`
+file is missing, it is computed from the downloaded file, in order to honor the
+resource contract.
 
 ### `out`: Not implemented
 

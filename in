@@ -76,6 +76,12 @@ else
     exit 1
 fi
 
+if [[ ! -f sha256 ]]; then
+    sha256sum "openssl-${version}.tar.gz" \
+        | cut --delimiter=" " --field="1" \
+        > sha256
+fi
+
 jq --null-input \
     --arg "version" "${version}" \
     '{ version: { version: $version } }' \
