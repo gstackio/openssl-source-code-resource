@@ -35,7 +35,7 @@ tarball_url=$(
         curl --silent --fail --show-error --location \
                 --url "https://artfiles.org/openssl.org/source/" \
             | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/\1|p'
-    ) | tail -n1
+    ) | tail --lines="1"
 )
 if [[ -z ${tarball_url} ]]; then
     echo >&2 "No such 'openssl-${version}.tar.gz' tarball available" \
