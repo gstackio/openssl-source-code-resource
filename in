@@ -27,11 +27,16 @@ pushd "${destination}" > /dev/null
 echo "${version}"       > version
 echo "${source_family}" > family
 
+directory="${source_family}"
+if [[ ${source_family} == 0.9.* ]]; then
+    directory="0.9.x"
+fi
+
 tarball_url=$(
     (
         curl --silent --fail --show-error --location \
-                --url "https://artfiles.org/openssl.org/source/old/${source_family}/" \
-            | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/old/'"${source_family}"'/\1|p'
+                --url "https://artfiles.org/openssl.org/source/old/${directory}/" \
+            | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/old/'"${directory}"'/\1|p'
         curl --silent --fail --show-error --location \
                 --url "https://artfiles.org/openssl.org/source/" \
             | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/\1|p'
@@ -40,7 +45,7 @@ tarball_url=$(
 if [[ -z ${tarball_url} ]]; then
     echo >&2 "No such 'openssl-${version}.tar.gz' tarball available" \
         "on 'https://artfiles.org/openssl.org/source/'" \
-        "or 'https://artfiles.org/openssl.org/source/old/${source_family}/'"
+        "or 'https://artfiles.org/openssl.org/source/old/${directory}/'"
     exit 1
 fi
 

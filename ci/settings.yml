@@ -71,6 +71,68 @@ jobs:
 
                 failure="false"
 
+                version_family="0.9.8"
+                old_version="0.9.8zg"
+
+                latest_version_json=$(
+                    jq --null-input \
+                            --arg "family" "${version_family}" \
+                            '{ "source": { "family": $family } }' \
+                        | /opt/resource/check
+                )
+                latest_version=$(jq --raw-output '.[0].version' <<< "${latest_version_json}")
+
+                if [[ ${latest_version} != ${version_family}* ]]; then
+                    echo >&2 "FAIL: expected version to start with '${version_family}', but got '${latest_version}'."
+                    failure="true"
+                fi
+
+                mkdir -p "artifact"
+                jq --null-input \
+                        --arg "version" "${old_version}" \
+                        --arg "family" "${version_family}" \
+                        '{
+                          "version": { "version": $version },
+                          "source": { "family": $family }
+                        }' \
+                    | /opt/resource/in "artifact"
+
+                if [[ ! -f "artifact/openssl-${old_version}.tar.gz" ]]; then
+                    >&2 echo "FAIL: expected to found a 'openssl-${old_version}.tar.gz' tarball, but got:"
+                    >&2 ls -la "artifact/"
+                    failure="true"
+                fi
+
+                if [[ ! -s "artifact/openssl-${old_version}.tar.gz" ]]; then
+                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+                    >&2 ls -la "artifact/"
+                    failure="true"
+                fi
+
+                mkdir -p "artifact"
+                jq --null-input \
+                        --arg "version" "${latest_version}" \
+                        --arg "family" "${version_family}" \
+                        '{
+                          "version": { "version": $version },
+                          "source": { "family": $family }
+                        }' \
+                    | /opt/resource/in "artifact"
+
+                if [[ ! -f "artifact/openssl-${latest_version}.tar.gz" ]]; then
+                    >&2 echo "FAIL: expected to found a 'openssl-${latest_version}.tar.gz' tarball, but got:"
+                    >&2 ls -la "artifact/"
+                    failure="true"
+                fi
+
+                if [[ ! -s "artifact/openssl-${latest_version}.tar.gz" ]]; then
+                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+                    >&2 ls -la "artifact/"
+                    failure="true"
+                fi
+
+
+
                 version_family="1.1.1"
                 old_version="1.1.1q"
 
