@@ -76,6 +76,12 @@ resource contract.
 
 Uploading a new OpenSSL source code tarball is not possible.
 
+
+
+<!-- START_OF_DOCKERHUB_STRIP -->
+
+## Development
+
 ## Build docker image
 
 ```
@@ -83,3 +89,36 @@ docker_user=gstack
 docker build -t "${docker_user}/openssl-source-code-resource" .
 docker push ${docker_user}/openssl-source-code-resource
 ```
+
+### Running the tests
+
+The tests are run by the `test` job of the concourse pipeline. You may run parts
+or all of the Bash script defined in `ci/settings.yml`. Pull requests are
+welcome for improving this, extracting the Bash script, create some Makefile and
+have them run locally with `make test`.
+
+### Contributing
+
+Please make all pull requests to the `master` branch and ensure tests pass
+locally.
+
+When submitting a Pull Request or pushing new commits, the Concourse CI/CD
+pipeline provides feedback with building the Dockerfile, which implies
+running the tests.
+
+<!-- END_OF_DOCKERHUB_STRIP -->
+
+
+
+## Author and License
+
+Copyright © 2021-present, Benjamin Gandon, Gstack
+
+Like Concourse, the key-value resource is released under the terms of the
+[Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).
+
+<!--
+# Local Variables:
+# indent-tabs-mode: nil
+# End:
+-->
