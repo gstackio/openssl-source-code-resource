@@ -31,10 +31,10 @@ latest_version=$(
     (
         curl --silent --fail --show-error --location \
                 --url "https://artfiles.org/openssl.org/source/old/${directory}/" \
-            | sed -ne 's/^.*href="openssl-\([0-9.]\{1,\}[a-z]\{0,1\}\)\.tar\.gz">.*/\1/p'
+            | sed -ne 's/^.*href="openssl-\([0-9.]\{1,\}[a-z]\{0,2\}\)\.tar\.gz">.*/\1/p'
         curl --silent --fail --show-error --location \
                 --url "https://artfiles.org/openssl.org/source/" \
-            | sed -ne 's/^.*href="openssl-\([0-9.]\{1,\}[a-z]\{0,1\}\)\.tar\.gz">.*/\1/p'
+            | sed -ne 's/^.*href="openssl-\([0-9.]\{1,\}[a-z]\{0,2\}\)\.tar\.gz">.*/\1/p'
     ) \
         | grep --color="never" -F "${source_family}" \
         | sort --version-sort \
