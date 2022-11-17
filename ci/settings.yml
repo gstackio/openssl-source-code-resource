@@ -5,7 +5,7 @@ meta:
   target:  gk-plat-devs
   url:     https://ci.gstack.io
 
-  initial_version: 1.0.0
+  initial_version: "1.0.0"
 
   git:
     email:  ((git-commit-email))
@@ -18,9 +18,10 @@ meta:
       password: ((docker-registry-password))
 
   dockerhub:
-    username: ((docker-registry-username))
-    password: ((docker-registry-password))
-    repository: (( concat "harbor.ci.gstack.io/gstack/" meta.name ))
+    username:   ((docker-registry-username))
+    password:   ((docker-registry-password))
+    org:        gstack
+    repository: (( concat "harbor.ci.gstack.io/" meta.dockerhub.org "/" meta.name ))
 
   aws:
     bucket:      (( grab meta.pipeline ))
@@ -39,20 +40,13 @@ meta:
     webhook:       ((slack-webhook))
     username:      ((slack-username))
     icon:          ((slack-icon-url))
-    channel:       "#pipelines-notifications"
-    test_fail_msg:  '(( concat ":concourse-fail: <" meta.url "/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME| Failed " meta.name " tests!  Click for details.>" ))'
+    channel:       "#oss-pipelines-notifications"
 
 groups:
   - name: (( grab meta.name ))
     jobs:
-      - (( delete "major" ))
-      - (( delete "minor" ))
       - (( append ))
       - test
-  - name: version
-    jobs:
-      - major
-      - minor
 
 jobs:
 
@@ -148,9 +142,9 @@ jobs:
             channel:  (( grab meta.slack.channel ))
             username: (( grab meta.slack.username ))
             icon_url: (( grab meta.slack.icon ))
-            text:     (( grab meta.slack.test_fail_msg ))
+            text:     (( grab meta.slack.fail_text ))
 
-  - name: promote
+  - name: pre
     plan:
       - (( inline ))
       - in_parallel:
@@ -158,7 +152,59 @@ jobs:
           - { get: edge, passed: [ (( replace )), test ] }
           - { get: git,  passed: [ (( replace )), test ] }
 
+  - name: promote
+    plan:
+      - (( inline ))
+      - {} # in_parallel:
+      - {} # task: release
+      - {} # load_var: version
+      - {} # put: latest
+
+      - task: update-dockerhub-readme
+        params:
+          # Use DockerHub credentials and not our private registry
+          DOCKERHUB_USERNAME:   ((dockerhub-username))
+          DOCKERHUB_PASSWORD:   ((dockerhub-password))
+          DOCKERHUB_REPOSITORY: (( concat meta.dockerhub.org "/" meta.name ))
+
+      - (( insert after 1 )) # insert after “task: release”
+      - task: append-usage
+        image: image
+        config:
+          platform: linux
+          inputs:  [ name: gh, name: version ]
+          outputs: [ name: gh ]
+          run:
+            path: bash
+            args:
+              - -c
+              - |
+                set -ueo pipefail
+                cat >> gh/notes.md <<EOF
+
+                ### Usage
+
+                \`\`\`yaml
+                resource_types:
+                  - name: bosh-config
+                    type: registry-image
+                    source:
+                      repository: ${DOCKERHUB_REPOSITORY}
+                      tag: "$(< version/number)"
+                \`\`\`
+                EOF
+        params:
+          DOCKERHUB_REPOSITORY: (( concat "gstack/" meta.name ))
+
 resources:
+
+  - name: git
+    check_every: 24h
+    webhook_token: ((concourse-webhook-token))
+
+  - name: git-pull-requests
+    check_every: 24h
+    webhook_token: ((concourse-webhook-token))
 
   - name: version
     source:
@@ -173,7 +219,3 @@ resources:
       file:        (( concat "versions/" meta.pipeline ))
       private_key: ((github-private-key))
       git_user:    "((git-commit-name)) <((git-commit-email))>"
-
-  - name: git
-    check_every: 24h
-    webhook_token: ((concourse-webhook-token))
