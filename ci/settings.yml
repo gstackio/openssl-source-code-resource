@@ -86,7 +86,7 @@ jobs:
     plan:
       - in_parallel:
           - { get: edge, passed: [ build ], trigger: true }
-          - { get: git,  passed: [ build ] }
+          - { get: git,  passed: [ build ], trigger: true }
       - task: test-image
         image: edge
         config:
