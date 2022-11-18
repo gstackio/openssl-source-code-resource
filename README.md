@@ -114,8 +114,8 @@ running the tests.
 
 Copyright © 2021-present, Benjamin Gandon, Gstack
 
-Like Concourse, the key-value resource is released under the terms of the
-[Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).
+Like Concourse, the OpenSSL source code resource is released under the terms of
+the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).
 
 <!--
 # Local Variables:
