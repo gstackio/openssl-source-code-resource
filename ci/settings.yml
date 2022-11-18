@@ -143,7 +143,8 @@ jobs:
                 fi
 
                 if [[ ! -s "artifact/openssl-${old_version}.tar.gz" ]]; then
-                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size." \
+                        "Artifact directory content is:"
                     >&2 ls -la "artifact/"
                     failure="true"
                 fi
@@ -157,7 +158,6 @@ jobs:
                     if ! sha256sum --check <<< "$(< sha256)  openssl-${old_version}.tar.gz"
                     then
                         echo >&2 "FAIL: expected 'sha256' checksum be correct."
-                        >&2 ls -la "artifact/"
                         failure="true"
                     fi
                 popd > /dev/null
@@ -219,7 +219,8 @@ jobs:
                 fi
 
                 if [[ ! -s "old/openssl-${old_version}.tar.gz" ]]; then
-                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size." \
+                        "Artifact directory content is:"
                     >&2 ls -la "old/"
                     failure="true"
                 fi
@@ -241,7 +242,8 @@ jobs:
                 fi
 
                 if [[ ! -s "current/openssl-${latest_version}.tar.gz" ]]; then
-                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size."
+                    echo >&2 "FAIL: expected tarball not to be empty, but it's of 0 size." \
+                        "Artifact directory content is:"
                     >&2 ls -la "current/"
                     failure="true"
                 fi
