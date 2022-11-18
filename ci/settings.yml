@@ -12,16 +12,24 @@ meta:
     name:   ((git-commit-name))
 
   image:
-    name: harbor.ci.gstack.io/gstack/gk-ops
+    name: (( concat meta.private-registry.host "/gstack/gk-ops" ))
     registry:
-      username: ((docker-registry-username))
-      password: ((docker-registry-password))
+      username: (( grab meta.private-registry.username ))
+      password: (( grab meta.private-registry.password ))
 
   dockerhub:
-    username:   ((docker-registry-username))
-    password:   ((docker-registry-password))
+    username:   ((dockerhub-username))
+    password:   ((dockerhub-password))
     org:        gstack
-    repository: (( concat "harbor.ci.gstack.io/" meta.dockerhub.org "/" meta.name ))
+    repository: (( concat meta.dockerhub.org "/" meta.name ))
+    short_desc:
+      A Concourse resource that deals with OpenSSL source code tarballs
+
+  private-registry:
+    host:       harbor.ci.gstack.io
+    username:   ((private-registry-username))
+    password:   ((private-registry-password))
+    repository: (( concat meta.private-registry.host "/" meta.dockerhub.org "/" meta.name ))
 
   aws:
     bucket:      (( grab meta.pipeline ))
@@ -261,19 +269,6 @@ jobs:
 
   - name: promote
     plan:
-      - (( inline ))
-      - {} # in_parallel:
-      - {} # task: release
-      - {} # load_var: version
-      - {} # put: latest
-
-      - task: update-dockerhub-readme
-        params:
-          # Use DockerHub credentials and not our private registry
-          DOCKERHUB_USERNAME:   ((dockerhub-username))
-          DOCKERHUB_PASSWORD:   ((dockerhub-password))
-          DOCKERHUB_REPOSITORY: (( concat meta.dockerhub.org "/" meta.name ))
-
       - (( insert after 1 )) # insert after “task: release”
       - task: append-usage
         image: image
@@ -301,7 +296,7 @@ jobs:
                 \`\`\`
                 EOF
         params:
-          DOCKERHUB_REPOSITORY: (( concat "gstack/" meta.name ))
+          DOCKERHUB_REPOSITORY: (( concat meta.dockerhub.org "/" meta.name ))
 
 resources:
 
@@ -312,6 +307,18 @@ resources:
   - name: git-pull-requests
     check_every: 24h
     webhook_token: ((concourse-webhook-token))
+
+  - name: edge
+    source:
+      username:   (( grab meta.private-registry.username ))
+      password:   (( grab meta.private-registry.password ))
+      repository: (( grab meta.private-registry.repository ))
+
+  - name: latest
+    source:
+      username:   (( grab meta.private-registry.username ))
+      password:   (( grab meta.private-registry.password ))
+      repository: (( grab meta.private-registry.repository ))
 
   - name: version
     icon: github
