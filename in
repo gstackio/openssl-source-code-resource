@@ -36,10 +36,10 @@ tarball_url=$(
     (
         curl --silent --fail --show-error --location \
                 --url "https://artfiles.org/openssl.org/source/old/${directory}/" \
-            | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/old/'"${directory}"'/\1|p'
+            | sed -nEe 's|^.*href="(openssl-'"${version}"'\.tar\.gz)">.*|https://www.openssl.org/source/old/'"${directory}"'/\1|p'
         curl --silent --fail --show-error --location \
                 --url "https://artfiles.org/openssl.org/source/" \
-            | sed -ne 's|^.*href="\(openssl-'"${version}"'\.tar\.gz\)">.*|https://www.openssl.org/source/\1|p'
+            | sed -nEe 's|^.*href="(openssl-'"${version}"'\.tar\.gz)">.*|https://www.openssl.org/source/\1|p'
     ) | tail --lines="1"
 )
 if [[ -z ${tarball_url} ]]; then
