@@ -50,11 +50,11 @@ jobs:
 
 ## Behavior
 
-### `check`: Check for new release versions
+### `check` Step (`check` script): Check for new release versions
 
 Get the latest version of OpenSSL source code in the defined version family.
 
-### `in`: Fetch release
+### `get` Step (`in` script): Fetch release
 
 Downloads the source code tarball for a version.
 
@@ -72,7 +72,7 @@ directory. When non is ab-vailable, the resource fails. Whenever the `sha256`
 file is missing, it is computed from the downloaded file, in order to honor the
 resource contract.
 
-### `out`: Not implemented
+### `put` Step (`out` script): Not implemented
 
 Uploading a new OpenSSL source code tarball is not possible.
 
