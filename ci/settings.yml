@@ -342,5 +342,5 @@ resources:
     icon: docker
     check_every: 24h
     source:
-      repository: alpine
-      tag:        latest
+      repository:        alpine
+      semver_constraint: "< 1970" # Avoid YYYYMMDD tags like '20231219'
