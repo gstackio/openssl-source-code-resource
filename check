@@ -8,13 +8,13 @@ exec 1>&2 # redirect all output to stderr for logging
 payload=$(cat <&0)
 
 source_family=$(jq -r '.source.family // empty' <<< "${payload}")
-if [[ -z ${source_family} ]]; then
+if [[ -z "${source_family}" ]]; then
     echo >&2 "Source parameter 'family' is missing"
     exit 1
 fi
 
 directory="${source_family}"
-if [[ ${source_family} == 0.9.* ]]; then
+if [[ "${source_family}" == 0.9.* ]]; then
     directory="0.9.x"
 fi
 

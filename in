@@ -16,7 +16,7 @@ if [[ -z ${version} ]]; then
 fi
 
 source_family=$(jq -r '.source.family // empty' <<< "${payload}")
-if [[ -z ${source_family} ]]; then
+if [[ -z "${source_family}" ]]; then
     echo >&2 "Source parameter 'family' is missing"
     exit 1
 fi
@@ -28,7 +28,7 @@ echo "${version}"       > version
 echo "${source_family}" > family
 
 directory="${source_family}"
-if [[ ${source_family} == 0.9.* ]]; then
+if [[ "${source_family}" == 0.9.* ]]; then
     directory="0.9.x"
 fi
 
@@ -42,7 +42,7 @@ tarball_url=$(
             | sed -nEe 's|^.*href="(openssl-'"${version}"'\.tar\.gz)">.*|https://www.openssl.org/source/\1|p'
     ) | tail --lines="1"
 )
-if [[ -z ${tarball_url} ]]; then
+if [[ -z "${tarball_url}" ]]; then
     echo >&2 "No such 'openssl-${version}.tar.gz' tarball available" \
         "on 'https://artfiles.org/openssl.org/source/'" \
         "or 'https://artfiles.org/openssl.org/source/old/${directory}/'"
