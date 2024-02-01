@@ -90,6 +90,7 @@ jobs:
           IMAGE_ARG_alpine: alpine-latest/image.tar
 
   - name: test
+    public: true
     serial: true
     plan:
       - in_parallel:
