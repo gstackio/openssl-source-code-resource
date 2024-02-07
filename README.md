@@ -1,3 +1,10 @@
+[![Docker Stars](https://img.shields.io/docker/stars/gstack/openssl-source-code-resource.svg?style=plastic)](https://registry.hub.docker.com/v2/repositories/gstack/openssl-source-code-resource/stars/count/)
+[![Docker pulls](https://img.shields.io/docker/pulls/gstack/openssl-source-code-resource.svg?style=plastic)](https://registry.hub.docker.com/v2/repositories/gstack/openssl-source-code-resource)
+<!--
+[![Concourse Build](https://ci.gstack.io/api/v1/teams/gk-plat-devs/pipelines/keyval-resource/jobs/build/badge)](https://ci.gstack.io/teams/gk-plat-devs/pipelines/keyval-resource)
+-->
+[![dockeri.co](https://dockeri.co/image/gstack/openssl-source-code-resource)](https://hub.docker.com/r/gstack/openssl-source-code-resource/)
+
 # OpenSSL source code Resource
 
 OpenSSL source code is made available via [openssl.org/source][openssl_source]
