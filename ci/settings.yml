@@ -296,7 +296,7 @@ jobs:
                     type: registry-image
                     source:
                       repository: ${DOCKERHUB_REPOSITORY}
-                      tag: "$(< version/number)"
+                      tag:        "$(< version/number)"
                 \`\`\`
                 EOF
         params:
