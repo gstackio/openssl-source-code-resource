@@ -91,7 +91,7 @@ Uploading a new OpenSSL source code tarball is not possible.
 
 ## Build docker image
 
-```
+```shell
 docker_user=gstack
 docker build -t "${docker_user}/openssl-source-code-resource" .
 docker push ${docker_user}/openssl-source-code-resource
