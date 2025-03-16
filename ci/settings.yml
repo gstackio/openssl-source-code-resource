@@ -300,6 +300,42 @@ jobs:
                     failure="true"
                 fi
 
+
+
+                version_family="3.3"
+
+                latest_version_json=$(
+                    jq --null-input \
+                            --arg "family" "${version_family}" \
+                            '{ "source": { "family": $family } }' \
+                        | /opt/resource/check
+                )
+                latest_version=$(jq --raw-output '.[0].version' <<< "${latest_version_json}")
+
+                if [[ ${latest_version} != ${version_family}* ]]; then
+                    echo >&2 "FAIL: expected version to start with '${version_family}', but got '${latest_version}'."
+                    failure="true"
+                fi
+
+
+
+                version_family="3.4"
+
+                latest_version_json=$(
+                    jq --null-input \
+                            --arg "family" "${version_family}" \
+                            '{ "source": { "family": $family } }' \
+                        | /opt/resource/check
+                )
+                latest_version=$(jq --raw-output '.[0].version' <<< "${latest_version_json}")
+
+                if [[ ${latest_version} != ${version_family}* ]]; then
+                    echo >&2 "FAIL: expected version to start with '${version_family}', but got '${latest_version}'."
+                    failure="true"
+                fi
+
+
+
                 if [[ ${failure} == true ]]; then
                     exit 1
                 fi
